@@ -10,6 +10,12 @@ const rollButton =
 const result =
     document.querySelector("#result");
 
+const strengthSelect =
+    document.querySelector("#strength");
+
+const themeSelect =
+    document.querySelector("#theme");
+
 
 /* ========================================
    サイコロの目の位置
@@ -315,6 +321,520 @@ function easeOutQuint(t) {
 
 
 /* ========================================
+   振る強さ
+======================================== */
+
+function getStrength() {
+
+    const strength =
+        strengthSelect.value;
+
+
+    if (strength === "weak") {
+
+        return {
+
+            duration: 2300,
+
+            minX: 4,
+            maxX: 6,
+
+            minY: 4,
+            maxY: 7,
+
+            minZ: 2,
+            maxZ: 4
+
+        };
+
+    }
+
+
+    if (strength === "strong") {
+
+        return {
+
+            duration: 1900,
+
+            minX: 10,
+            maxX: 14,
+
+            minY: 11,
+            maxY: 16,
+
+            minZ: 7,
+            maxZ: 11
+
+        };
+
+    }
+
+
+    return {
+
+        duration: 2050,
+
+        minX: 8,
+        maxX: 11,
+
+        minY: 8,
+        maxY: 12,
+
+        minZ: 5,
+        maxZ: 8
+
+    };
+
+}
+
+
+/* ========================================
+   効果音
+   Web Audio API
+======================================== */
+
+let audioContext = null;
+
+
+function getAudioContext() {
+
+    if (!audioContext) {
+
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+
+    }
+
+
+    return audioContext;
+
+}
+
+
+/* サイコロが転がる音 */
+
+function playRollSound() {
+
+    try {
+
+        const ctx =
+            getAudioContext();
+
+
+        if (
+            ctx.state ===
+            "suspended"
+        ) {
+
+            ctx.resume();
+
+        }
+
+
+        const start =
+            ctx.currentTime;
+
+
+        for (
+            let i = 0;
+            i < 14;
+            i++
+        ) {
+
+            const oscillator =
+                ctx.createOscillator();
+
+            const gain =
+                ctx.createGain();
+
+
+            oscillator.type =
+                "square";
+
+
+            oscillator.frequency.value =
+                90 +
+                Math.random() * 70;
+
+
+            gain.gain.setValueAtTime(
+                0.0001,
+                start + i * 0.075
+            );
+
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.045,
+                start + i * 0.075 + 0.008
+            );
+
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.0001,
+                start + i * 0.075 + 0.055
+            );
+
+
+            oscillator.connect(gain);
+
+            gain.connect(ctx.destination);
+
+
+            oscillator.start(
+                start + i * 0.075
+            );
+
+
+            oscillator.stop(
+                start + i * 0.075 + 0.06
+            );
+
+        }
+
+    } catch (error) {
+
+        console.log(
+            "効果音を再生できませんでした"
+        );
+
+    }
+
+}
+
+
+/* 止まった音 */
+
+function playStopSound() {
+
+    try {
+
+        const ctx =
+            getAudioContext();
+
+
+        const oscillator =
+            ctx.createOscillator();
+
+        const gain =
+            ctx.createGain();
+
+
+        oscillator.type =
+            "sine";
+
+
+        oscillator.frequency.setValueAtTime(
+            150,
+            ctx.currentTime
+        );
+
+
+        oscillator.frequency.exponentialRampToValueAtTime(
+            70,
+            ctx.currentTime + 0.12
+        );
+
+
+        gain.gain.setValueAtTime(
+            0.0001,
+            ctx.currentTime
+        );
+
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.15,
+            ctx.currentTime + 0.01
+        );
+
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.0001,
+            ctx.currentTime + 0.15
+        );
+
+
+        oscillator.connect(gain);
+
+        gain.connect(ctx.destination);
+
+
+        oscillator.start();
+
+        oscillator.stop(
+            ctx.currentTime + 0.16
+        );
+
+    } catch (error) {
+
+        console.log(
+            "効果音を再生できませんでした"
+        );
+
+    }
+
+}
+
+
+/* ========================================
+   役ごとの特殊音
+======================================== */
+
+function playRoleSound(role) {
+
+    try {
+
+        const ctx =
+            getAudioContext();
+
+
+        if (
+            ctx.state ===
+            "suspended"
+        ) {
+
+            ctx.resume();
+
+        }
+
+
+        let frequencies;
+
+
+        if (
+            role === "ピンゾロ"
+        ) {
+
+            frequencies =
+                [523, 659, 784, 1046];
+
+        } else if (
+            role === "アラシ"
+        ) {
+
+            frequencies =
+                [180, 240, 320];
+
+        } else if (
+            role === "ヒフミ"
+        ) {
+
+            frequencies =
+                [300, 220];
+
+        } else if (
+            role === "シゴロ"
+        ) {
+
+            frequencies =
+                [392, 494, 587, 784];
+
+        } else {
+
+            return;
+
+        }
+
+
+        frequencies.forEach(
+            (frequency, index) => {
+
+                const oscillator =
+                    ctx.createOscillator();
+
+                const gain =
+                    ctx.createGain();
+
+
+                oscillator.type =
+                    "sine";
+
+
+                oscillator.frequency.value =
+                    frequency;
+
+
+                const time =
+                    ctx.currentTime +
+                    index * 0.1;
+
+
+                gain.gain.setValueAtTime(
+                    0.0001,
+                    time
+                );
+
+
+                gain.gain.exponentialRampToValueAtTime(
+                    0.12,
+                    time + 0.015
+                );
+
+
+                gain.gain.exponentialRampToValueAtTime(
+                    0.0001,
+                    time + 0.25
+                );
+
+
+                oscillator.connect(gain);
+
+                gain.connect(ctx.destination);
+
+
+                oscillator.start(time);
+
+                oscillator.stop(
+                    time + 0.26
+                );
+
+            }
+        );
+
+    } catch (error) {
+
+        console.log(
+            "役の効果音を再生できませんでした"
+        );
+
+    }
+
+}
+
+
+/* ========================================
+   役の特殊演出
+======================================== */
+
+function playRoleEffect(role) {
+
+    result.className = "";
+
+
+    /* アニメーションを再スタート */
+
+    void result.offsetWidth;
+
+
+    if (
+        role === "ピンゾロ"
+    ) {
+
+        result.classList.add(
+            "role-pin"
+        );
+
+    } else if (
+        role === "アラシ"
+    ) {
+
+        result.classList.add(
+            "role-arashi"
+        );
+
+    } else if (
+        role === "ヒフミ"
+    ) {
+
+        result.classList.add(
+            "role-hifumi"
+        );
+
+    } else if (
+        role === "シゴロ"
+    ) {
+
+        result.classList.add(
+            "role-shigoro"
+        );
+
+    } else if (
+        role === "目なし"
+    ) {
+
+        result.classList.add(
+            "role-none"
+        );
+
+    } else {
+
+        result.classList.add(
+            "role-eye"
+        );
+
+    }
+
+
+    playRoleSound(role);
+
+}
+
+
+/* ========================================
+   テーマ変更
+======================================== */
+
+function changeTheme(theme) {
+
+    document.body.classList.remove(
+        "theme-neon",
+        "theme-japan",
+        "theme-vip"
+    );
+
+
+    if (
+        theme === "neon"
+    ) {
+
+        document.body.classList.add(
+            "theme-neon"
+        );
+
+    }
+
+
+    if (
+        theme === "japan"
+    ) {
+
+        document.body.classList.add(
+            "theme-japan"
+        );
+
+    }
+
+
+    if (
+        theme === "vip"
+    ) {
+
+        document.body.classList.add(
+            "theme-vip"
+        );
+
+    }
+
+}
+
+
+/* テーマ変更 */
+
+themeSelect.addEventListener(
+    "change",
+    () => {
+
+        changeTheme(
+            themeSelect.value
+        );
+
+    }
+);
+
+
+/* ========================================
    サイコロを転がす
 ======================================== */
 
@@ -330,30 +850,39 @@ function animateDice(
             die.parentElement;
 
 
-        /* =================================
-           3個とも同じ時間
-        ================================= */
+        const setting =
+            getStrength();
+
 
         const duration =
-            2050;
+            setting.duration;
 
 
         const startTime =
             performance.now();
 
 
-        /* =================================
-           回転量
-        ================================= */
+        /* 回転量 */
 
         const turnsX =
-            random(8, 11);
+            random(
+                setting.minX,
+                setting.maxX
+            );
+
 
         const turnsY =
-            random(8, 12);
+            random(
+                setting.minY,
+                setting.maxY
+            );
+
 
         const turnsZ =
-            random(5, 8);
+            random(
+                setting.minZ,
+                setting.maxZ
+            );
 
 
         const directionX =
@@ -361,10 +890,12 @@ function animateDice(
                 ? 1
                 : -1;
 
+
         const directionY =
             Math.random() > 0.5
                 ? 1
                 : -1;
+
 
         const directionZ =
             Math.random() > 0.5
@@ -377,10 +908,12 @@ function animateDice(
             360 *
             directionX;
 
+
         const spinY =
             turnsY *
             360 *
             directionY;
+
 
         const spinZ =
             turnsZ *
@@ -388,29 +921,22 @@ function animateDice(
             directionZ;
 
 
-        /* =================================
-           スタート位置
-        ================================= */
+        /* スタート位置 */
 
         const startX =
             random(-20, 20);
+
 
         const startZ =
             random(-15, 15);
 
 
-        /* =================================
-           ★ 停止位置
-           
-           3個を近めの等間隔に配置
-        ================================= */
+        /* 停止位置 */
 
         const endPositions = [
-
             -100,
             0,
             100
-
         ];
 
 
@@ -422,17 +948,11 @@ function animateDice(
             random(-5, 5);
 
 
-        /* =================================
-           上から落ちてくる
-        ================================= */
+        /* 上から落ちてくる */
 
         const startY =
             -130;
 
-
-        /* =================================
-           アニメーション
-        ================================= */
 
         function frame(now) {
 
@@ -442,30 +962,20 @@ function animateDice(
 
 
             if (t < 0) {
-
                 t = 0;
-
             }
 
 
             if (t > 1) {
-
                 t = 1;
-
             }
 
-
-            /* =================================
-               なめらかな減速
-            ================================= */
 
             const eased =
                 easeOutQuint(t);
 
 
-            /* =================================
-               横移動
-            ================================= */
+            /* 横移動 */
 
             const x =
                 startX +
@@ -473,9 +983,7 @@ function animateDice(
                 * eased;
 
 
-            /* =================================
-               縦移動
-            ================================= */
+            /* 縦移動 */
 
             let y =
                 startY +
@@ -488,9 +996,7 @@ function animateDice(
                 130 * eased;
 
 
-            /* =================================
-               着地
-            ================================= */
+            /* 着地 */
 
             if (t > 0.78) {
 
@@ -511,9 +1017,7 @@ function animateDice(
             }
 
 
-            /* =================================
-               奥行き
-            ================================= */
+            /* 奥行き */
 
             const z =
                 startZ +
@@ -521,25 +1025,21 @@ function animateDice(
                 * eased;
 
 
-            /* =================================
-               回転
-            ================================= */
+            /* 回転 */
 
             let rx =
                 spinX * eased;
 
+
             let ry =
                 spinY * eased;
+
 
             let rz =
                 spinZ * eased;
 
 
-            /* =================================
-               停止直前の揺れ
-               
-               小さくして硬直を減らす
-            ================================= */
+            /* 停止直前の揺れ */
 
             let extraX = 0;
             let extraY = 0;
@@ -566,8 +1066,10 @@ function animateDice(
                         Math.PI *
                         2
                     )
-                    * 0.6
-                    * strength;
+                    *
+                    0.6
+                    *
+                    strength;
 
 
                 extraY =
@@ -576,8 +1078,10 @@ function animateDice(
                         Math.PI *
                         2.2
                     )
-                    * 0.5
-                    * strength;
+                    *
+                    0.5
+                    *
+                    strength;
 
 
                 extraZ =
@@ -586,17 +1090,15 @@ function animateDice(
                         Math.PI *
                         1.7
                     )
-                    * 0.4
-                    * strength;
+                    *
+                    0.4
+                    *
+                    strength;
 
             }
 
 
-            /* =================================
-               最後に正面へ
-               
-               3個とも同じタイミング
-            ================================= */
+            /* 最後に正面へ */
 
             if (t > 0.94) {
 
@@ -615,9 +1117,11 @@ function animateDice(
                     rx *
                     (1 - finalEase);
 
+
                 ry =
                     ry *
                     (1 - finalEase);
+
 
                 rz =
                     rz *
@@ -625,10 +1129,6 @@ function animateDice(
 
             }
 
-
-            /* =================================
-               表示
-            ================================= */
 
             scene.style.transform =
 
@@ -648,20 +1148,13 @@ function animateDice(
                 )`;
 
 
-            /* =================================
-               終了
-            ================================= */
-
             if (t < 1) {
 
-                requestAnimationFrame(frame);
+                requestAnimationFrame(
+                    frame
+                );
 
             } else {
-
-                /*
-                 * 3個とも同じタイミングで
-                 * 正面を向いて停止
-                 */
 
                 scene.style.transform =
 
@@ -768,7 +1261,9 @@ function animateShonben(die) {
 
             if (t < 1) {
 
-                requestAnimationFrame(frame);
+                requestAnimationFrame(
+                    frame
+                );
 
             } else {
 
@@ -787,6 +1282,21 @@ function animateShonben(die) {
 
 
 /* ========================================
+   役ごとの結果表示
+======================================== */
+
+function showRole(role) {
+
+    result.textContent =
+        "役：" + role;
+
+
+    playRoleEffect(role);
+
+}
+
+
+/* ========================================
    サイコロを振る
 ======================================== */
 
@@ -794,11 +1304,20 @@ rollButton.addEventListener(
     "click",
     async () => {
 
-        rollButton.disabled = true;
+        rollButton.disabled =
+            true;
+
+
+        result.className = "";
 
 
         result.textContent =
             "役：サイコロを振っています…";
+
+
+        /* 効果音 */
+
+        playRollSound();
 
 
         /* =================================
@@ -846,6 +1365,11 @@ rollButton.addEventListener(
         );
 
 
+        /* 停止音 */
+
+        playStopSound();
+
+
         /* =================================
            ションベン
         ================================= */
@@ -875,6 +1399,10 @@ rollButton.addEventListener(
                 "残念、おわんからでてしまった！あなたはしょんべんです";
 
 
+            result.className =
+                "role-none";
+
+
             rollButton.disabled =
                 false;
 
@@ -901,15 +1429,18 @@ rollButton.addEventListener(
 
 
         /* =================================
-           役を表示
+           役を判定
         ================================= */
 
         const role =
             checkRole(numbers);
 
 
-        result.textContent =
-            "役：" + role;
+        /* =================================
+           役を表示＋演出
+        ================================= */
+
+        showRole(role);
 
 
         rollButton.disabled =

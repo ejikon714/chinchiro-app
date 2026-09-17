@@ -23,39 +23,115 @@
         <h1>チンチロ</h1>
 
 
+        <!-- ================================
+             サイコロ
+        ================================= -->
+
         <div class="dice-area">
 
             <div class="dice-scene">
-                <div class="dice"
-                    id="dice1">
-                </div>
+                <div class="dice" id="dice1"></div>
             </div>
 
-
             <div class="dice-scene">
-                <div class="dice"
-                    id="dice2">
-                </div>
+                <div class="dice" id="dice2"></div>
             </div>
 
-
             <div class="dice-scene">
-                <div class="dice"
-                    id="dice3">
-                </div>
+                <div class="dice" id="dice3"></div>
             </div>
 
         </div>
 
+
+        <!-- ================================
+             設定
+        ================================= -->
+
+        <div class="settings">
+
+            <div class="setting">
+
+                <label for="strength">
+                    振る強さ
+                </label>
+
+                <select id="strength">
+
+                    <option value="weak">
+                        弱
+                    </option>
+
+                    <option value="normal"
+                        selected>
+                        普通
+                    </option>
+
+                    <option value="strong">
+                        強
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="setting">
+
+                <label for="theme">
+                    テーマ
+                </label>
+
+                <select id="theme">
+
+                    <option value="normal"
+                        selected>
+                        通常
+                    </option>
+
+                    <option value="neon">
+                        ネオン
+                    </option>
+
+                    <option value="japan">
+                        和風
+                    </option>
+
+                    <option value="vip">
+                        VIP
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================
+             振るボタン
+        ================================= -->
 
         <button id="rollButton">
             サイコロを振る
         </button>
 
 
+        <!-- ================================
+             結果
+        ================================= -->
+
         <p id="result">
             役：---
         </p>
+
+
+        <!-- ================================
+             演出用
+        ================================= -->
+
+        <div id="effect">
+        </div>
 
     </main>
 
